@@ -3,6 +3,7 @@ package VmTranslater::CodeWriter;
 
 use strict;
 use warnings;
+use Carp qw(croak);
  
 our $VERSION = "1.00";
 
@@ -32,8 +33,6 @@ given it is passed to C<< $hello->target >>.
  
 =cut
  
- my $fh;
- 
 # The constructor of an object is called new() by convention.  Any
 # method may construct an object and you can have as many as you like.
  sub new {
@@ -42,6 +41,8 @@ given it is passed to C<< $hello->target >>.
  my $self = bless({}, $class);
  
  open $fh, '>', $args{filename} or die "Could not open '$args{filename}' $!\n";
+ 
+ $self->{filehandle} = $fh;
  
  return $self;
 }
@@ -58,8 +59,10 @@ Informs the code writer that the translation of a new VM file is started.
 sub setFileName {
 	my $self = shift;
 	my $fileName = shift;
-	# TODO Set up parser with fileName here
-	...;
+	# TODO Informs code writer that translation of a new .vm file has started - only one codewriter for all .vms
+	my($vmname, @other) = split($filename, /\./);
+	
+	$self->{vmname} = $vmname;
 }
  
  
@@ -89,7 +92,15 @@ Writes the assembly code that is the translation of the given command, where $co
 sub writePushPop {
 	my $self = shift;
 	my ($command, $segment, $index) = @_;
-	...;
+	if($command eq "push") {
+		
+	}
+	elsif($command eq "pop") {
+		...;
+	}
+	else {
+		croak "Error in pushpop: $command is not command.";
+	}
 }
 
 =head3 close
@@ -108,9 +119,8 @@ sub close
 
 sub DESTROY {
 	my $self = shift;
-	# TODO: Needed?
 	
-	#close $self->$fh;
+	close $self->{filehandle};
 }
 
  
