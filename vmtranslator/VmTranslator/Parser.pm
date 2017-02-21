@@ -92,7 +92,7 @@ sub advance {
  
     $parser->commandType;
  
-Returns the type of the current VM command. C_ARITMETIC is returned for all the aritimetic commands.
+Returns the type of the current VM command. C_ARITHMETIC is returned for all the aritimetic commands.
 Return values are 
 C_ARITMETIC, C_PUSH, C_POP, C_LABEL, C_GOTO, C_IF, C_FUNCTION, C_RETURN, C_CALL
  
@@ -101,7 +101,7 @@ C_ARITMETIC, C_PUSH, C_POP, C_LABEL, C_GOTO, C_IF, C_FUNCTION, C_RETURN, C_CALL
 sub commandType {
 	my $self = shift;
 	# TODO Consider hash table
-	return "C_ARITMETIC" if($self->{command} =~ /add|sub|neg|eq|gt|lt|and|or|not/i);
+	return "C_ARITHMETIC" if($self->{command} =~ /add|sub|neg|eq|gt|lt|and|or|not/i);
 	return "C_PUSH" if($self->{command} =~ /push/i);
 	return "C_POP" if($self->{command} =~ /pop/i);
 	
@@ -120,7 +120,7 @@ Returns the first argument of the current command. In the case of C_ARITMETIC, t
 
 sub arg1 {
 	my $self = shift;
-	return $self->{command} if($self->commandType eq "C_ARITMETIC");
+	return $self->{command} if($self->commandType eq "C_ARITHMETIC");
 	my ($thecommand, $thearg1, @other) = split(/ /, $self->{command});
 	return $thearg1;
 }

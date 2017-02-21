@@ -1,5 +1,5 @@
 # In Perl there is no special 'class' definition.  A namespace is a class.
-package VmTranslater::CodeWriter;
+package VmTranslator::CodeWriter;
 
 use strict;
 use warnings;
@@ -40,7 +40,7 @@ given it is passed to C<< $hello->target >>.
  
  my $self = bless({}, $class);
  
- open $fh, '>', $args{filename} or die "Could not open '$args{filename}' $!\n";
+ open my $fh, '>', $args{filename} or die "Could not open '$args{filename}' $!\n";
  
  $self->{filehandle} = $fh;
  
@@ -58,9 +58,9 @@ Informs the code writer that the translation of a new VM file is started.
  
 sub setFileName {
 	my $self = shift;
-	my $fileName = shift;
+	my $filename = shift;
 	# TODO Informs code writer that translation of a new .vm file has started - only one codewriter for all .vms
-	my($vmname, @other) = split($filename, /\./);
+	my($vmname, @other) = split(/\./, $filename);
 	
 	$self->{vmname} = $vmname;
 }
@@ -77,7 +77,16 @@ Writes the assembly code that is the translation of the given arithmetic command
 sub writeArithmetic {
 	my $self = shift;
 	my $command = shift;
-	...;
+	my $fh = $self->{filehandle};
+	
+	if($command eq "add") {
+		print $fh "\@SP\nM=M-1\n\@SP\nA=M\nD=M\n\@var1\nM=D\n";
+		print $fh "\@SP\nM=M-1\n\@SP\nA=M\nD=M\n\@var2\nM=D\n";
+		print $fh "\@var1\nD=M\n\@var2\nD=D+M\n";
+		print $fh "\@SP\nA=M\nM=D\n\@SP\nM=M+1\n";
+		
+	}
+	croak "Error in arithmetic: $command is not command.";
 }
  
  
@@ -92,16 +101,25 @@ Writes the assembly code that is the translation of the given command, where $co
 sub writePushPop {
 	my $self = shift;
 	my ($command, $segment, $index) = @_;
-	if($command eq "push") {
-		
+	
+	my $fh = $self->{filehandle};
+	
+	if($command eq "C_PUSH") {
+		if($segment eq "constant") {
+			print $fh "\@$index\nD=A\n\@SP\nA=M\nM=D\n\@SP\nM=M+1\n";
+			return;
+		}
 	}
-	elsif($command eq "pop") {
+	
+	if($command eq "C_POP") {
 		...;
+		return;
 	}
-	else {
-		croak "Error in pushpop: $command is not command.";
-	}
+	
+	croak "Error in pushpop: $command is not command.";
+	
 }
+
 
 =head3 close
  
@@ -119,8 +137,8 @@ sub close
 
 sub DESTROY {
 	my $self = shift;
-	
-	close $self->{filehandle};
+	my $fh = $self->{filehandle}; 
+	#close $fh;
 }
 
  
