@@ -36,15 +36,36 @@ given it is passed to C<< $hello->target >>.
 # The constructor of an object is called new() by convention.  Any
 # method may construct an object and you can have as many as you like.
  sub new {
- my($class, %args) = @_;
- 
- my $self = bless({}, $class);
- 
- open my $fh, '>', $args{filename} or die "Could not open '$args{filename}' $!\n";
- 
- $self->{filehandle} = $fh;
- 
- return $self;
+	my($class, %args) = @_;
+
+	my $self = bless({}, $class);
+
+	# Open output file and store handle
+	open my $fh, '>', $args{filename} or die "Could not open '$args{filename}' $!\n";
+	$self->{filehandle} = $fh;
+
+	# Set up instruction strings
+	my $instructions = {
+		"popintovar1" => "\@SP\nM=M-1\n\@SP\nA=M\nD=M\n\@var1\nM=D\n",
+		"popintovar2" => "\@SP\nM=M-1\n\@SP\nA=M\nD=M\n\@var2\nM=D\n",
+		"pushresult" => "\@SP\nA=M\nM=D\n\@SP\nM=M+1\n",
+		"add" => "\@var1\nD=M\n\@var2\nD=D+M\n",
+		"sub" => "\@var1\nD=M\n\@var2\nD=D-M\n",
+		"and" => "\@var1\nD=M\n\@var2\nD=D&M\n",
+		"or" => "\@var1\nD=M\n\@var2\nD=D|M\n",
+		"neg" => "\@var1\nD=-M\n",
+		"not" => "\@var1\nD=!M\n",
+		"more" => "..."
+	};
+	$self->{instructions} = $instructions;
+	
+	# Write initial preamble to file
+	print $fh "// Set up stack\n\@256\nD=A\n\@SP\nM=D\n";
+	
+	# Set initial lablecounter to 0
+	$self->{labelcounter} = 0;
+
+ 	return $self;
 }
  
  
@@ -78,13 +99,35 @@ sub writeArithmetic {
 	my $self = shift;
 	my $command = shift;
 	my $fh = $self->{filehandle};
+	my $instructions = $self->{instructions};
 	
-	if($command eq "add") {
-		print $fh "\@SP\nM=M-1\n\@SP\nA=M\nD=M\n\@var1\nM=D\n";
-		print $fh "\@SP\nM=M-1\n\@SP\nA=M\nD=M\n\@var2\nM=D\n";
-		print $fh "\@var1\nD=M\n\@var2\nD=D+M\n";
-		print $fh "\@SP\nA=M\nM=D\n\@SP\nM=M+1\n";
+	if($command =~ /add|sub|and|or/) {
+		print $fh $instructions->{"popintovar2"};
+		print $fh $instructions->{"popintovar1"};
+		print $fh $instructions->{$command};
+		print $fh $instructions->{"pushresult"};
+		return;
+	}
+	if($command =~ /eq|gt|lt/) {
+		my $labelCounter = $self->{labelcounter};
+		my $labelStart = "__START$labelCounter";
+		my $labelEnd = "__END$labelCounter";
+		my $jump = 'J'.(uc($command));
 		
+		print $fh $instructions->{"popintovar2"};
+		print $fh $instructions->{"popintovar1"};
+		print $fh $instructions->{"sub"};
+		print $fh "\@$labelStart\nD;$jump\n\@0\nD=A\n\@$labelEnd\n0;JMP\n($labelStart)\n\@1\nD=A\n($labelEnd)\n";
+		print $fh $instructions->{"pushresult"};
+		
+		$self->{labelcounter} = $labelCounter + 1;
+		return;
+	}
+	if($command =~ /neg|not/) {
+		print $fh $instructions->{"popintovar1"};
+		print $fh $instructions->{$command};
+		print $fh $instructions->{"pushresult"};
+		return;
 	}
 	croak "Error in arithmetic: $command is not command.";
 }
@@ -103,10 +146,12 @@ sub writePushPop {
 	my ($command, $segment, $index) = @_;
 	
 	my $fh = $self->{filehandle};
+	my $instructions = $self->{instructions};
 	
 	if($command eq "C_PUSH") {
 		if($segment eq "constant") {
-			print $fh "\@$index\nD=A\n\@SP\nA=M\nM=D\n\@SP\nM=M+1\n";
+			print $fh "\@$index\nD=A\n";
+			print $fh $instructions->{"pushresult"};
 			return;
 		}
 	}
