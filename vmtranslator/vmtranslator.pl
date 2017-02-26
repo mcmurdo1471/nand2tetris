@@ -44,7 +44,7 @@ else {
 
 		if($REAL_OUTPUT) {
 			$codewriter->setFileName("foof.vm");
-			if($commandType =~ /C_PUSH/) {
+			if($commandType =~ /C_PUSH|C_POP/) {
 				$codewriter->writePushPop($commandType, $parser->arg1, $parser->arg2);
 			}
 			if($commandType =~ /C_ARITHMETIC/) {

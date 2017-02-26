@@ -3,7 +3,7 @@ package VmTranslator::CodeWriter;
 
 use strict;
 use warnings;
-use Carp qw(croak);
+use Carp qw(croak carp);
  
 our $VERSION = "1.00";
 
@@ -60,7 +60,14 @@ given it is passed to C<< $hello->target >>.
 	$self->{instructions} = $instructions;
 	
 	# Write initial preamble to file
+	# TODO Put these into hash
 	print $fh "// Set up stack\n\@256\nD=A\n\@SP\nM=D\n";
+	print $fh "// local segment\n\@300\nD=A\n\@LCL\nM=D\n";
+	print $fh "// argument segment\n\@400\nD=A\n\@ARG\nM=D\n";
+	print $fh "// this segment\n\@3000\nD=A\n\@THIS\nM=D\n";
+	print $fh "// that segment\n\@3010\nD=A\n\@THAT\nM=D\n";
+	#print $fh "// temp segment\n\@5\nD=A\n\@TEMP\nM=D\n";
+	#print $fh "// register segment\n\@13\nD=A\n\@REG\nM=D\n";
 	
 	# Set initial lablecounter to 0
 	$self->{labelcounter} = 0;
@@ -117,7 +124,7 @@ sub writeArithmetic {
 		print $fh $instructions->{"popintovar2"};
 		print $fh $instructions->{"popintovar1"};
 		print $fh $instructions->{"sub"};
-		print $fh "\@$labelStart\nD;$jump\n\@0\nD=A\n\@$labelEnd\n0;JMP\n($labelStart)\n\@1\nD=A\n($labelEnd)\n";
+		print $fh "\@$labelStart\nD;$jump\n\@0\nD=A\n\@$labelEnd\n0;JMP\n($labelStart)\n\@0\nD=!A\n($labelEnd)\n";
 		print $fh $instructions->{"pushresult"};
 		
 		$self->{labelcounter} = $labelCounter + 1;
@@ -154,10 +161,37 @@ sub writePushPop {
 			print $fh $instructions->{"pushresult"};
 			return;
 		}
+		else {
+			print $fh "\@$index\nD=A\n";
+		
+			print $fh "\@LCL\n" if($segment eq "local");
+			print $fh "\@ARG\n" if($segment eq "argument");
+			print $fh "\@THIS\n" if($segment eq "this");
+			print $fh "\@THAT\n" if($segment eq "that");
+			print $fh "\@5\n" if($segment eq "temp");
+			
+			print $fh "A=D+M\n\@mem\nM=A\n"; # location of segment+index in @mem
+			
+			print $fh "\@mem\nA=M\nD=M\n";
+			print $fh $instructions->{"pushresult"};
+			
+			return;
+		}
 	}
 	
 	if($command eq "C_POP") {
-		...;
+		print $fh $instructions->{"popintovar1"};
+		# Pop from stack into segment
+		print $fh "\@$index\nD=A\n";
+		
+		print $fh "\@LCL\n" if($segment eq "local");
+		print $fh "\@ARG\n" if($segment eq "argument");
+		print $fh "\@THIS\n" if($segment eq "this");
+		print $fh "\@THAT\n" if($segment eq "that");
+		print $fh "\@5\n" if($segment eq "temp");
+		#TODO Bounds checking!
+		print $fh "// here\n";
+		print $fh "A=D+M\n\@mem\nM=A\n\@var1\nD=M\n\@mem\nA=M\nM=D\n";
 		return;
 	}
 	
