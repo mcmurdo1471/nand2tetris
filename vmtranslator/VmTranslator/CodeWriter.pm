@@ -162,6 +162,14 @@ sub writePushPop {
 			print $fh $instructions->{"pushresult"};
 			return;
 		}
+		
+		if($segment eq "static") {
+			my $file = $self->{vmname};
+			my $var = "$file.$index";
+			print $fh "\@$var\nD=M\n";
+			print $fh $instructions->{"pushresult"};
+			return;
+		}
 				
 		print $fh "\@$index\nD=A\n";
 		
@@ -183,6 +191,15 @@ sub writePushPop {
 	
 	if($command eq "C_POP") {
 	
+		if($segment eq "static") {
+			my $file = $self->{vmname};
+			my $var = "$file.$index";
+			print $fh $instructions->{"popintovar1"};
+			print $fh "\@var1\nD=M\n\@$var\nM=D\n";
+			return;
+		}
+		
+		
 		print $fh $instructions->{"popintovar1"};
 		# Pop from stack into segment
 		print $fh "\@$index\nD=A\n";
