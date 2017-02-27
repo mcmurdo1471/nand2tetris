@@ -66,7 +66,7 @@ given it is passed to C<< $hello->target >>.
 	print $fh "// argument segment\n\@400\nD=A\n\@ARG\nM=D\n";
 	print $fh "// this segment\n\@3000\nD=A\n\@THIS\nM=D\n";
 	print $fh "// that segment\n\@3010\nD=A\n\@THAT\nM=D\n";
-	#print $fh "// temp segment\n\@5\nD=A\n\@TEMP\nM=D\n";
+	print $fh "// temp segment\n\@5\nD=A\n\@TEMP\nM=D\n";
 	#print $fh "// register segment\n\@13\nD=A\n\@REG\nM=D\n";
 	
 	# Set initial lablecounter to 0
@@ -168,9 +168,9 @@ sub writePushPop {
 			print $fh "\@ARG\n" if($segment eq "argument");
 			print $fh "\@THIS\n" if($segment eq "this");
 			print $fh "\@THAT\n" if($segment eq "that");
-			print $fh "\@5\n" if($segment eq "temp");
+			print $fh "\@TEMP\n" if($segment eq "temp");
 			
-			print $fh "A=D+M\n\@mem\nM=A\n"; # location of segment+index in @mem
+			print $fh "D=D+M\n\@mem\nM=D\n"; # location of segment+index in @mem
 			
 			print $fh "\@mem\nA=M\nD=M\n";
 			print $fh $instructions->{"pushresult"};
@@ -188,10 +188,10 @@ sub writePushPop {
 		print $fh "\@ARG\n" if($segment eq "argument");
 		print $fh "\@THIS\n" if($segment eq "this");
 		print $fh "\@THAT\n" if($segment eq "that");
-		print $fh "\@5\n" if($segment eq "temp");
+		print $fh "\@TEMP\n" if($segment eq "temp");
 		#TODO Bounds checking!
 		print $fh "// here\n";
-		print $fh "A=D+M\n\@mem\nM=A\n\@var1\nD=M\n\@mem\nA=M\nM=D\n";
+		print $fh "D=D+M\n\@mem\nM=D\n\@var1\nD=M\n\@mem\nA=M\nM=D\n";
 		return;
 	}
 	
