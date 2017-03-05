@@ -228,10 +228,102 @@ sub writePushPop {
 Closes the output file.
  
 =cut
-
-
 sub close
 {
+	...;
+}
+
+
+=head3 writeInit
+ 
+    $codeWriter->writeInit;
+ 
+Writes assembly code that effects the VMinitialisation also called bootstrap code.
+
+This code must be placed at the beginning of the output file.
+ 
+=cut
+sub writeInit
+{
+	...;
+}
+
+=head3 writeLabel
+ 
+    $codeWriter->writeLabel($labelString);
+ 
+Writes assembly code that effects the label command.
+ 
+=cut
+sub writeLabel
+{
+	my $label = shift;
+	...;
+}
+
+=head3 writeGoto
+ 
+    $codeWriter->writeGoto($labelString);
+ 
+Writes assembly code that effects the goto command.
+ 
+=cut
+sub writeGoto
+{
+	my $label = shift;
+	...;
+}
+
+=head3 writeIf
+ 
+    $codeWriter->writeIf($labelString);
+ 
+Writes assembly code that effects the if-goto command.
+ 
+=cut
+sub writeIf
+{
+	my $label = shift;
+	...;
+}
+
+=head3 writeCall
+ 
+    $codeWriter->writeCall($functionNameString, $numArgsInt);
+ 
+Writes assembly code that effects the call command.
+ 
+=cut
+sub writeCall
+{
+	my $functionName = shift;
+	my $numArgs = shift;
+	...;
+}
+
+=head3 writeReturn
+ 
+    $codeWriter->writeReturn;
+ 
+Writes assembly code that effects the return command.
+ 
+=cut
+sub writeReturn
+{
+	...;
+}
+
+=head3 writeFunction
+ 
+    $codeWriter->writeFunction($functionNameString, $numLocalsInt);
+ 
+Writes assembly code that effects the function command.
+ 
+=cut
+sub writeFunction
+{
+	my $functionName = shift;
+	my $numLocals = shift;
 	...;
 }
 
