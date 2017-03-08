@@ -23,6 +23,9 @@ else {
 	my $parser = VmTranslator::Parser->new( filename => $path );
 	my $codewriter = VmTranslator::CodeWriter->new( filename => $asm );
 	
+	# Write the VM initialisation
+	$codewriter->writeInit;
+	
 	while($parser->hasMoreCommands) {
 		$parser->advance;
 		
@@ -49,6 +52,15 @@ else {
 			}
 			if($commandType =~ /C_ARITHMETIC/) {
 				$codewriter->writeArithmetic($parser->arg1);
+			}
+			if($commandType eq "C_LABEL") {
+				$codewriter->writeLabel($parser->arg1);
+			}
+			if($commandType eq "C_GOTO") {
+				$codewriter->writeGoto($parser->arg1);
+			}
+			if($commandType eq "C_IF") {
+				$codewriter->writeIf($parser->arg1);
 			}
 		}
 		

@@ -59,17 +59,6 @@ given it is passed to C<< $hello->target >>.
 	};
 	$self->{instructions} = $instructions;
 	
-	# Write initial preamble to file
-	# TODO Put these into hash
-	print $fh "// Set up stack\n\@256\nD=A\n\@SP\nM=D\n";
-	print $fh "// local segment\n\@300\nD=A\n\@LCL\nM=D\n";
-	print $fh "// argument segment\n\@400\nD=A\n\@ARG\nM=D\n";
-	print $fh "// this segment\n\@3000\nD=A\n\@THIS\nM=D\n";
-	print $fh "// that segment\n\@3010\nD=A\n\@THAT\nM=D\n";
-	print $fh "// temp segment\n\@5\nD=A\n\@TEMP\nM=D\n";
-	print $fh "// pointer segment\n\@3\nD=A\n\@POINTER\nM=D\n";
-	#print $fh "// register segment\n\@13\nD=A\n\@REG\nM=D\n";
-	
 	# Set initial lablecounter to 0
 	$self->{labelcounter} = 0;
 
@@ -245,7 +234,19 @@ This code must be placed at the beginning of the output file.
 =cut
 sub writeInit
 {
-	...;
+	my $self = shift;
+	my $fh = $self->{filehandle};
+	
+	# Write initial preamble to file
+	# TODO Put these into hash
+	print $fh "// Set up stack\n\@256\nD=A\n\@SP\nM=D\n";
+	print $fh "// local segment\n\@300\nD=A\n\@LCL\nM=D\n";
+	print $fh "// argument segment\n\@400\nD=A\n\@ARG\nM=D\n";
+	print $fh "// this segment\n\@3000\nD=A\n\@THIS\nM=D\n";
+	print $fh "// that segment\n\@3010\nD=A\n\@THAT\nM=D\n";
+	print $fh "// temp segment\n\@5\nD=A\n\@TEMP\nM=D\n";
+	print $fh "// pointer segment\n\@3\nD=A\n\@POINTER\nM=D\n";
+	#print $fh "// register segment\n\@13\nD=A\n\@REG\nM=D\n";
 }
 
 =head3 writeLabel
@@ -257,8 +258,12 @@ Writes assembly code that effects the label command.
 =cut
 sub writeLabel
 {
+	my $self = shift;
 	my $label = shift;
-	...;
+	my $fh = $self->{filehandle};
+	my $vmname = $self->{vmname};
+	
+	print $fh "($vmname.$label)\n";
 }
 
 =head3 writeGoto
@@ -270,8 +275,12 @@ Writes assembly code that effects the goto command.
 =cut
 sub writeGoto
 {
+	my $self = shift;
 	my $label = shift;
-	...;
+	my $fh = $self->{filehandle};
+	my $vmname = $self->{vmname};
+
+	print $fh "\@$vmname.$label\n0;JMP\n";
 }
 
 =head3 writeIf
@@ -283,8 +292,15 @@ Writes assembly code that effects the if-goto command.
 =cut
 sub writeIf
 {
+	my $self = shift;
 	my $label = shift;
-	...;
+	my $fh = $self->{filehandle};
+	my $vmname = $self->{vmname};
+	my $instructions = $self->{instructions};
+	
+	print $fh $instructions->{"popintovar1"};
+	print $fh "\@var1\nD=M\n";
+	print $fh "\@$vmname.$label\nD;JNE\n";
 }
 
 =head3 writeCall
@@ -296,6 +312,7 @@ Writes assembly code that effects the call command.
 =cut
 sub writeCall
 {
+	my $self = shift;
 	my $functionName = shift;
 	my $numArgs = shift;
 	...;
@@ -310,6 +327,7 @@ Writes assembly code that effects the return command.
 =cut
 sub writeReturn
 {
+	my $self = shift;
 	...;
 }
 
@@ -322,6 +340,7 @@ Writes assembly code that effects the function command.
 =cut
 sub writeFunction
 {
+	my $self = shift;
 	my $functionName = shift;
 	my $numLocals = shift;
 	...;

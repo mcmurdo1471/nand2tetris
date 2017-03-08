@@ -104,6 +104,9 @@ sub commandType {
 	return "C_ARITHMETIC" if($self->{command} =~ /add|sub|neg|eq|gt|lt|and|or|not/i);
 	return "C_PUSH" if($self->{command} =~ /push/i);
 	return "C_POP" if($self->{command} =~ /pop/i);
+	return "C_LABEL" if($self->{command} =~ /label/i);
+	return "C_IF" if($self->{command} =~ /if-goto/i);
+	return "C_GOTO" if($self->{command} =~ /goto/i);
 	
 	# TODO: Not to spec...!
 	return "C_UNKNOWN";
