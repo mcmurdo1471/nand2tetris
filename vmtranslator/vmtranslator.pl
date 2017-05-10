@@ -3,7 +3,6 @@
 
 use strict;
 use warnings;
-use File::BaseName;
 use VmTranslator::Parser;
 use VmTranslator::CodeWriter;
 
@@ -14,53 +13,18 @@ my $asm = shift;
 
 my $DEBUG_OUTPUT = 1;
 my $REAL_OUTPUT = 1;
-my $filecounter = 0;
-
-# One CodeWriter per asm
-my $codewriter = VmTranslator::CodeWriter->new( filename => $asm );
-
-# Write the VM initialisation
-$codewriter->writeInit;
-
 
 if(-d $path) {
 	say 'Directory';
-	
-	opendir my $dir, $path or die "Cannot open directory: $!";
-	my @files = readdir $dir;
-	closedir $dir;
-	
-	foreach my $file (@files) {
-		if($file =~ /\.vm$/) {
-			doFile($file);
-		}
-	}
+	# TODO Handle directory of files
 }
 else {
-	doFile($path);
-}
-
-sub basename {
-	# Until I get File::Basename installed
-	my $path = shift;
-	my $filename = "file$filecounter" . ".vm";
-	$filecounter++;
-	return $filename;
-}
-
-sub doFile {
-
-	my $path = shift;
-	
-	my $vmname = basename($path);
-	$vmname =~ tr/\.vm$//;
-
+	# Assume file
 	my $parser = VmTranslator::Parser->new( filename => $path );
+	my $codewriter = VmTranslator::CodeWriter->new( filename => $asm );
 	
-	if($DEBUG_OUTPUT) {
-		say $path;
-		say $vmname;
-	}
+	# Write the VM initialisation
+	$codewriter->writeInit;
 	
 	while($parser->hasMoreCommands) {
 		$parser->advance;
@@ -82,7 +46,7 @@ sub doFile {
 		}
 
 		if($REAL_OUTPUT) {
-			$codewriter->setFileName($vmname);
+			$codewriter->setFileName("foof.vm");
 			if($commandType =~ /C_PUSH|C_POP/) {
 				$codewriter->writePushPop($commandType, $parser->arg1, $parser->arg2);
 			}
@@ -99,6 +63,7 @@ sub doFile {
 				$codewriter->writeIf($parser->arg1);
 			}
 		}
-	}
+		
 
+	}
 }
